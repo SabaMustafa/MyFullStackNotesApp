@@ -25,8 +25,8 @@ const NoteForm = () => {
 
   return (
     <form onSubmit={handleSubmit}>
-      <input type="text" placeholder="Title" value={title} onChange={(e) => setTitle(e.target.value)} required />
-      <textarea placeholder="Content" value={content} onChange={(e) => setContent(e.target.value)} required />
+      <input type="text"  name="title" placeholder="Title" value={title} onChange={(e) => setTitle(e.target.value)} required />
+      <textarea name="content"  placeholder="Content" value={content} onChange={(e) => setContent(e.target.value)} required />
       <button type="submit">Create Note</button>
     </form>
   );
