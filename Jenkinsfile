@@ -1,32 +1,36 @@
 pipeline {
   agent any
-  options {
-    timestamps()
-    disableConcurrentBuilds()
-  }
+  options { timestamps(); disableConcurrentBuilds() }
 
   stages {
-    stage('Backend: Setup & Tests') {
+    stage('Backend: Setup') {
       steps {
         dir('notes_project') {
-          // Use a single, multi-line *slashy* string to avoid escaping backslashes
           bat(/IF NOT EXIST venv (
   python -m venv venv
 )
 SET VENV=%CD%\venv
-
 "%VENV%\Scripts\python.exe" -m pip install --upgrade pip
-
 IF EXIST requirements.txt (
   "%VENV%\Scripts\python.exe" -m pip install -r requirements.txt
 ) ELSE (
   echo No requirements.txt found. Installing minimal deps...
-  "%VENV%\Scripts\python.exe" -m pip install Django djangorestframework
-)
+  "%VENV%\Scripts\python.exe" -m pip install Django djangorestframework django-cors-headers
+)/)
+        }
+      }
+    }
 
-"%VENV%\Scripts\python.exe" -m django --version
-"%VENV%\Scripts\python.exe" manage.py test --noinput
-/)
+    stage('Backend: Tests') {
+      steps {
+        dir('notes_project') {
+          // If you want frontend to run even if tests fail, wrap with catchError:
+          script {
+            catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
+              bat(/"%CD%\venv\Scripts\python.exe" -m django --version/)
+              bat(/"%CD%\venv\Scripts\python.exe" manage.py test --noinput/)
+            }
+          }
         }
       }
     }
@@ -34,7 +38,11 @@ IF EXIST requirements.txt (
     stage('Frontend: Install') {
       steps {
         dir('notes-frontend') {
-          bat(/npm install/)
+          bat(/IF EXIST package-lock.json (
+  npm ci
+) ELSE (
+  npm install
+)/)
         }
       }
     }
