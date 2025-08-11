@@ -1,72 +1,63 @@
 pipeline {
-    agent any
-    options {
-        timestamps()
-        disableConcurrentBuilds()
+  agent any
+  options {
+    timestamps()
+    disableConcurrentBuilds()
+  }
+
+  stages {
+    stage('Backend: Setup & Tests') {
+      steps {
+        dir('notes_project') {
+          // Use a single, multi-line *slashy* string to avoid escaping backslashes
+          bat(/IF NOT EXIST venv (
+  python -m venv venv
+)
+SET VENV=%CD%\venv
+
+"%VENV%\Scripts\python.exe" -m pip install --upgrade pip
+
+IF EXIST requirements.txt (
+  "%VENV%\Scripts\python.exe" -m pip install -r requirements.txt
+) ELSE (
+  echo No requirements.txt found. Installing minimal deps...
+  "%VENV%\Scripts\python.exe" -m pip install Django djangorestframework
+)
+
+"%VENV%\Scripts\python.exe" -m django --version
+"%VENV%\Scripts\python.exe" manage.py test --noinput
+/)
+        }
+      }
     }
 
-    stages {
-        stage('Backend: Setup') {
-            steps {
-                dir('notes_project') {
-                    bat """
-                    if not exist venv (
-                        python -m venv venv
-                    )
-                    call venv\\Scripts\\activate
-                    pip install --upgrade pip
-                    if exist requirements.txt (
-                        pip install -r requirements.txt
-                    ) else (
-                        echo No requirements.txt found. Skipping pip install.
-                    )
-                    """
-                }
-            }
+    stage('Frontend: Install') {
+      steps {
+        dir('notes-frontend') {
+          bat(/npm install/)
         }
-
-        stage('Backend: Tests') {
-            steps {
-                dir('notes_project') {
-                    bat """
-                    call venv\\Scripts\\activate
-                    python manage.py test --noinput
-                    """
-                }
-            }
-        }
-
-        stage('Frontend: Install') {
-            steps {
-                dir('notes-frontend') {
-                    bat """
-                    npm install
-                    """
-                }
-            }
-        }
-
-        stage('Frontend: Build') {
-            steps {
-                dir('notes-frontend') {
-                    bat """
-                    npm run build
-                    """
-                }
-            }
-        }
+      }
     }
 
-    post {
-        success {
-            echo '✅ Pipeline finished successfully.'
-            archiveArtifacts artifacts: 'notes-frontend/build/**', fingerprint: true, onlyIfSuccessful: true
+    stage('Frontend: Build') {
+      steps {
+        dir('notes-frontend') {
+          bat(/npm run build/)
         }
-        failure {
-            echo '❌ Pipeline failed. Check stage logs.'
-        }
-        always {
-            echo "Build URL: ${env.BUILD_URL}"
-        }
+      }
     }
+  }
+
+  post {
+    success {
+      echo '✅ Pipeline finished successfully.'
+      archiveArtifacts artifacts: 'notes-frontend/build/**', fingerprint: true, onlyIfSuccessful: true
+    }
+    failure {
+      echo '❌ Pipeline failed. Check stage logs.'
+    }
+    always {
+      echo "Build URL: ${env.BUILD_URL}"
+    }
+  }
 }
