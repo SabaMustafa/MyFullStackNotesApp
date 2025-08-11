@@ -6,34 +6,25 @@ pipeline {
   }
 
   stages {
-
-    stage('Backend: Setup') {
+    stage('Backend: Setup & Tests') {
       steps {
         dir('notes_project') {
-          // Triple single-quotes avoid escaping backslashes
-          bat '''
-          if not exist venv (
+          bat """
+          IF NOT EXIST venv (
             python -m venv venv
           )
-          call venv\Scripts\activate
-          venv\Scripts\python.exe -m pip install --upgrade pip
-          if exist requirements.txt (
-            venv\Scripts\python.exe -m pip install -r requirements.txt
-          ) else (
+          SET VENV=%CD%\\venv
+
+          "%VENV%\\Scripts\\python.exe" -m pip install --upgrade pip
+
+          IF EXIST requirements.txt (
+            "%VENV%\\Scripts\\python.exe" -m pip install -r requirements.txt
+          ) ELSE (
             echo No requirements.txt found. Skipping pip install.
           )
-          '''
-        }
-      }
-    }
 
-    stage('Backend: Tests') {
-      steps {
-        dir('notes_project') {
-          bat '''
-          call venv\Scripts\activate
-          python manage.py test --noinput
-          '''
+          "%VENV%\\Scripts\\python.exe" manage.py test --noinput
+          """
         }
       }
     }
@@ -41,9 +32,9 @@ pipeline {
     stage('Frontend: Install') {
       steps {
         dir('notes-frontend') {
-          bat '''
+          bat """
           npm install
-          '''
+          """
         }
       }
     }
@@ -51,9 +42,9 @@ pipeline {
     stage('Frontend: Build') {
       steps {
         dir('notes-frontend') {
-          bat '''
+          bat """
           npm run build
-          '''
+          """
         }
       }
     }
