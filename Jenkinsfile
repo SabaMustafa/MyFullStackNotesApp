@@ -5,24 +5,20 @@ pipeline {
         disableConcurrentBuilds()
     }
 
-    stages {
-        stage('Backend: Setup') {
-            steps {
-                dir('notes_project') {
-                    bat """
-                    if not exist venv (
-                        python -m venv venv
-                    )
-                    call venv\\Scripts\\activate
-                    pip install --upgrade pip
-                    if exist requirements.txt (
-                        pip install -r requirements.txt
-                    ) else (
-                        echo No requirements.txt found. Skipping pip install.
-                    )
-                    """
-                }
+    stage('Backend: Setup') {
+          steps {
+            dir('notes_project') {
+              bat """
+              if not exist venv ( python -m venv venv )
+              call venv\\Scripts\\activate
+              if exist requirements.txt (
+                venv\\Scripts\\python.exe -m pip install -r requirements.txt
+              ) else (
+                echo No requirements.txt found. Skipping pip install.
+              )
+              """
             }
+          }
         }
 
         stage('Backend: Tests') {
