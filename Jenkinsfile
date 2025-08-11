@@ -5,8 +5,7 @@ pipeline {
     disableConcurrentBuilds()
   }
 
-  stages {
-    stage('Backend: Setup & Tests') {
+  stage('Backend: Setup & Tests') {
       steps {
         dir('notes_project') {
           bat """
@@ -14,21 +13,21 @@ pipeline {
             python -m venv venv
           )
           SET VENV=%CD%\\venv
-
+    
           "%VENV%\\Scripts\\python.exe" -m pip install --upgrade pip
-
+    
           IF EXIST requirements.txt (
             "%VENV%\\Scripts\\python.exe" -m pip install -r requirements.txt
           ) ELSE (
-            echo No requirements.txt found. Skipping pip install.
+            echo No requirements.txt found. Installing minimal deps...
+            "%VENV%\\Scripts\\python.exe" -m pip install Django djangorestframework
           )
-
+    
           "%VENV%\\Scripts\\python.exe" manage.py test --noinput
           """
         }
       }
     }
-
     stage('Frontend: Install') {
       steps {
         dir('notes-frontend') {
