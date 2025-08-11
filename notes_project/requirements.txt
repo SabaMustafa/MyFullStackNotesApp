@@ -1,0 +1,12 @@
+# Core Django dependencies
+Django>=4.2,<6
+djangorestframework>=3.14,<4
+django-cors-headers>=4.0,<5
+
+# Optional but recommended for development
+pytz
+sqlparse>=0.5.0
+
+# Add any other packages you use here
+# Example: psycopg2-binary>=2.9  # if using PostgreSQL
+# Example: mysqlclient>=2.1      # if using MySQL
